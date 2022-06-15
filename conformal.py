@@ -14,7 +14,7 @@ import pdb
 # Save it to a file in .cache/modelname
 # The only difference is that the forward method of ConformalModel also outputs a set.
 class ConformalModel(nn.Module):
-    def __init__(self, model, calib_loader, alpha, kreg=None, lamda=None, randomized=True, allow_zero_sets=False, pct_paramtune = 0.3, batch_size=32, lamda_criterion='size'):
+    def __init__(self, model, calib_loader, alpha, kreg=None, lamda=None, constant_regularization=True, randomized=True, allow_zero_sets=False, pct_paramtune = 0.3, batch_size=32, lamda_criterion='size'):
         super(ConformalModel, self).__init__()
         self.model = model 
         self.alpha = alpha
@@ -25,10 +25,14 @@ class ConformalModel(nn.Module):
         self.num_classes = len(calib_loader.dataset.dataset.classes)
 
         if kreg == None or lamda == None:
-            kreg, lamda, calib_logits = pick_parameters(model, calib_logits, alpha, kreg, lamda, randomized, allow_zero_sets, pct_paramtune, batch_size, lamda_criterion)
+            kreg, lamda, calib_logits = pick_parameters(model, calib_logits, alpha, kreg, lamda, constant_regularization, randomized, allow_zero_sets, pct_paramtune, batch_size, lamda_criterion)
 
         self.penalties = np.zeros((1, self.num_classes))
-        self.penalties[:, kreg:] += lamda 
+        if constant_regularization:
+            factor = np.ones((1, self.penalties.shape[1] - kreg))
+        else:
+            factor = np.arange(self.penalties.shape[1] - kreg).reshape((1,-1)) + 1
+        self.penalties[:, kreg:] += lamda * factor
 
         calib_loader = tdata.DataLoader(calib_logits, batch_size = batch_size, shuffle=False, pin_memory=True)
 
@@ -91,7 +95,7 @@ def platt(cmodel, calib_loader, max_iters=10, lr=0.01, epsilon=0.01):
 ### Precomputed-logit versions of the above functions.
 
 class ConformalModelLogits(nn.Module):
-    def __init__(self, model, calib_loader, alpha, kreg=None, lamda=None, randomized=True, allow_zero_sets=False, naive=False, LAC=False, pct_paramtune = 0.3, batch_size=32, lamda_criterion='size'):
+    def __init__(self, model, calib_loader, alpha, kreg=None, lamda=None, constant_regularization=True, randomized=True, allow_zero_sets=False, naive=False, LAC=False, pct_paramtune = 0.3, batch_size=32, lamda_criterion='size'):
         super(ConformalModelLogits, self).__init__()
         self.model = model 
         self.alpha = alpha
@@ -101,12 +105,16 @@ class ConformalModelLogits(nn.Module):
         self.T = platt_logits(self, calib_loader)
 
         if (kreg == None or lamda == None) and not naive and not LAC:
-            kreg, lamda, calib_logits = pick_parameters(model, calib_loader.dataset, alpha, kreg, lamda, randomized, allow_zero_sets, pct_paramtune, batch_size, lamda_criterion)
+            kreg, lamda, calib_logits = pick_parameters(model, calib_loader.dataset, alpha, kreg, lamda, constant_regularization, randomized, allow_zero_sets, pct_paramtune, batch_size, lamda_criterion)
             calib_loader = tdata.DataLoader(calib_logits, batch_size=batch_size, shuffle=False, pin_memory=True)
 
         self.penalties = np.zeros((1, calib_loader.dataset[0][0].shape[0]))
         if not (kreg == None) and not naive and not LAC:
-            self.penalties[:, kreg:] += lamda
+            if constant_regularization:
+                factor = np.ones((1, self.penalties.shape[1] - kreg))
+            else:
+                factor = np.arange(self.penalties.shape[1] - kreg).reshape((1, -1)) + 1
+            self.penalties[:, kreg:] += lamda * factor
         self.Qhat = 1-alpha
         if not naive and not LAC:
             self.Qhat = conformal_calibration_logits(self, calib_loader)
@@ -238,32 +246,32 @@ def pick_kreg(paramtune_logits, alpha):
     kstar = np.quantile(gt_locs_kstar, 1-alpha, interpolation='higher') + 1
     return kstar 
 
-def pick_lamda_size(model, paramtune_loader, alpha, kreg, randomized, allow_zero_sets):
+def pick_lamda_size(model, paramtune_loader, alpha, kreg, constant_regularization, randomized, allow_zero_sets):
     # Calculate lamda_star
     best_size = iter(paramtune_loader).__next__()[0][1].shape[0] # number of classes 
     # Use the paramtune data to pick lamda.  Does not violate exchangeability.
     for temp_lam in [0.001, 0.01, 0.1, 0.2, 0.5]: # predefined grid, change if more precision desired.
-        conformal_model = ConformalModelLogits(model, paramtune_loader, alpha=alpha, kreg=kreg, lamda=temp_lam, randomized=randomized, allow_zero_sets=allow_zero_sets, naive=False)
+        conformal_model = ConformalModelLogits(model, paramtune_loader, alpha=alpha, kreg=kreg, lamda=temp_lam, constant_regularization=constant_regularization, randomized=randomized, allow_zero_sets=allow_zero_sets, naive=False)
         top1_avg, top5_avg, cvg_avg, sz_avg = validate(paramtune_loader, conformal_model, print_bool=False)
         if sz_avg < best_size:
             best_size = sz_avg
             lamda_star = temp_lam
     return lamda_star
 
-def pick_lamda_adaptiveness(model, paramtune_loader, alpha, kreg, randomized, allow_zero_sets, strata=[[0,1],[2,3],[4,6],[7,10],[11,100],[101,1000]]):
+def pick_lamda_adaptiveness(model, paramtune_loader, alpha, kreg, constant_regularization, randomized, allow_zero_sets, strata=[[0,1],[2,3],[4,6],[7,10],[11,100],[101,1000]]):
     # Calculate lamda_star
     lamda_star = 0
     best_violation = 1
     # Use the paramtune data to pick lamda.  Does not violate exchangeability.
     for temp_lam in [0, 1e-5, 1e-4, 8e-4, 9e-4, 1e-3, 1.5e-3, 2e-3]: # predefined grid, change if more precision desired.
-        conformal_model = ConformalModelLogits(model, paramtune_loader, alpha=alpha, kreg=kreg, lamda=temp_lam, randomized=randomized, allow_zero_sets=allow_zero_sets, naive=False)
+        conformal_model = ConformalModelLogits(model, paramtune_loader, alpha=alpha, kreg=kreg, lamda=temp_lam, constant_regularization=constant_regularization, randomized=randomized, allow_zero_sets=allow_zero_sets, naive=False)
         curr_violation = get_violation(conformal_model, paramtune_loader, strata, alpha)
         if curr_violation < best_violation:
             best_violation = curr_violation 
             lamda_star = temp_lam
     return lamda_star
 
-def pick_parameters(model, calib_logits, alpha, kreg, lamda, randomized, allow_zero_sets, pct_paramtune, batch_size, lamda_criterion):
+def pick_parameters(model, calib_logits, alpha, kreg, lamda, constant_regularization, randomized, allow_zero_sets, pct_paramtune, batch_size, lamda_criterion):
     num_paramtune = int(np.ceil(pct_paramtune * len(calib_logits)))
     paramtune_logits, calib_logits = tdata.random_split(calib_logits, [num_paramtune, len(calib_logits)-num_paramtune])
     calib_loader = tdata.DataLoader(calib_logits, batch_size=batch_size, shuffle=False, pin_memory=True)
@@ -273,9 +281,9 @@ def pick_parameters(model, calib_logits, alpha, kreg, lamda, randomized, allow_z
         kreg = pick_kreg(paramtune_logits, alpha)
     if lamda == None:
         if lamda_criterion == "size":
-            lamda = pick_lamda_size(model, paramtune_loader, alpha, kreg, randomized, allow_zero_sets)
+            lamda = pick_lamda_size(model, paramtune_loader, alpha, kreg, constant_regularization, randomized, allow_zero_sets)
         elif lamda_criterion == "adaptiveness":
-            lamda = pick_lamda_adaptiveness(model, paramtune_loader, alpha, kreg, randomized, allow_zero_sets)
+            lamda = pick_lamda_adaptiveness(model, paramtune_loader, alpha, kreg, constant_regularization, randomized, allow_zero_sets)
     return kreg, lamda, calib_logits
 
 def get_violation(cmodel, loader_paramtune, strata, alpha):

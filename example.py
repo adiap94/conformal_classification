@@ -48,6 +48,10 @@ if __name__ == "__main__":
     model = torch.nn.DataParallel(model) 
     model.eval()
 
+    # if None, model will pick lamda on its own
+    lamda = None
+    # use the normal RAPS regularization
+    constant_regularization = True
     # optimize for 'size' or 'adaptiveness'
     lamda_criterion = 'size'
     # allow sets of size zero
@@ -56,7 +60,7 @@ if __name__ == "__main__":
     randomized = True 
 
     # Conformalize model
-    model = ConformalModel(model, calib_loader, alpha=0.1, lamda=0, randomized=randomized, allow_zero_sets=allow_zero_sets)
+    model = ConformalModel(model, calib_loader, alpha=0.1, lamda=lamda, constant_regularization=constant_regularization, randomized=randomized, allow_zero_sets=allow_zero_sets)
 
     print("Model calibrated and conformalized! Now evaluate over remaining data.")
     validate(val_loader, model, print_bool=True)
