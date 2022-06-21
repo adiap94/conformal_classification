@@ -11,7 +11,7 @@ import torch.backends.cudnn as cudnn
 import random
 
 parser = argparse.ArgumentParser(description='Conformalize Torchvision Model on Imagenet')
-parser.add_argument('data', metavar='IMAGENETVALDIR', help='path to Imagenet Val')
+parser.add_argument('--data', metavar='IMAGENETVALDIR', help='path to Imagenet Val',default="/home/stu4/ml_roie_adi/data_project/imagenet_val/")
 parser.add_argument('--batch_size', metavar='BSZ', help='batch size', default=128)
 parser.add_argument('--num_workers', metavar='NW', help='number of workers', default=0)
 parser.add_argument('--num_calib', metavar='NCALIB', help='number of calibration points', default=10000)
@@ -43,15 +43,21 @@ if __name__ == "__main__":
 
     cudnn.benchmark = True
 
-    # Get the model 
-    model = torchvision.models.resnet152(pretrained=True,progress=True).cuda()
+    # Get the model
+    #define gpu
+    os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+    device = torch.device("cuda:0")
+
+    model = torchvision.models.resnet152(pretrained=True,progress=True).to(device)
     model = torch.nn.DataParallel(model) 
     model.eval()
 
     # if None, model will pick lamda on its own
     lamda = None
+    #define
+    k_reg = None
     # use the normal RAPS regularization
-    constant_regularization = True
+    constant_regularization = False
     # optimize for 'size' or 'adaptiveness'
     lamda_criterion = 'size'
     # allow sets of size zero
@@ -60,7 +66,7 @@ if __name__ == "__main__":
     randomized = True 
 
     # Conformalize model
-    model = ConformalModel(model, calib_loader, alpha=0.1, lamda=lamda, constant_regularization=constant_regularization, randomized=randomized, allow_zero_sets=allow_zero_sets)
+    model = ConformalModel(model, calib_loader, alpha=0.1, lamda=lamda, constant_regularization=constant_regularization, randomized=randomized, allow_zero_sets=allow_zero_sets,kreg= kreg)
 
     print("Model calibrated and conformalized! Now evaluate over remaining data.")
     validate(val_loader, model, print_bool=True)
