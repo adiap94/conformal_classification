@@ -27,11 +27,12 @@ class ConformalModel(nn.Module):
         if kreg == None or lamda == None:
             kreg, lamda, calib_logits = pick_parameters(model, calib_logits, alpha, kreg, lamda, constant_regularization, randomized, allow_zero_sets, pct_paramtune, batch_size, lamda_criterion)
         print("k_reg = " + str(kreg))
+        print("lamda = " + str(lamda))
         self.penalties = np.zeros((1, self.num_classes))
         if constant_regularization:
             factor = np.ones((1, self.penalties.shape[1] - kreg))
         else:
-            factor = np.arange(self.penalties.shape[1] - kreg).reshape((1,-1)) + 1
+            factor = 2*np.arange(self.penalties.shape[1] - kreg).reshape((1,-1)) + 1
         self.penalties[:, kreg:] += lamda * factor
 
         calib_loader = tdata.DataLoader(calib_logits, batch_size = batch_size, shuffle=False, pin_memory=True)
@@ -113,7 +114,7 @@ class ConformalModelLogits(nn.Module):
             if constant_regularization:
                 factor = np.ones((1, self.penalties.shape[1] - kreg))
             else:
-                factor = np.arange(self.penalties.shape[1] - kreg).reshape((1, -1)) + 1
+                factor = 2 * np.arange(self.penalties.shape[1] - kreg).reshape((1, -1)) + 1
             self.penalties[:, kreg:] += lamda * factor
         self.Qhat = 1-alpha
         if not naive and not LAC:
