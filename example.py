@@ -55,7 +55,7 @@ if __name__ == "__main__":
     # if None, model will pick lamda on its own
     lamda = None
     #define
-    k_reg = None
+    kreg = 0
     # use the normal RAPS regularization
     constant_regularization = False
     # optimize for 'size' or 'adaptiveness'
