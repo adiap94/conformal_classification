@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import time
 from utils import * 
 from conformal import ConformalModel
+from model_selections import select_model
 import torch.backends.cudnn as cudnn
 import random
 
@@ -19,7 +20,7 @@ parser.add_argument('--num_calib', metavar='NCALIB', help='number of calibration
 # optimize for 'size' or 'adaptiveness'
 lamda_criterion = 'size'
 
-def main(seed=0,kreg = None,constant_regularization = True,lamda=None):
+def main(seed=0,kreg = None,constant_regularization = True,lamda=None,model_str="resnet152"):
     args = parser.parse_args()
     ### Fix randomness
     np.random.seed(seed=seed)
@@ -53,7 +54,9 @@ def main(seed=0,kreg = None,constant_regularization = True,lamda=None):
     os.environ["CUDA_VISIBLE_DEVICES"] = '2'
     device = torch.device("cuda:0")
 
-    model = torchvision.models.resnet152(pretrained=True, progress=True).to(device)
+    # choose a model
+    model = select_model(model_str=model_str)
+    model = model.to(device)
     model = torch.nn.DataParallel(model)
     model.eval()
 
@@ -85,4 +88,5 @@ if __name__ == "__main__":
     kreg = None
     # use the normal RAPS regularization
     constant_regularization = True
+    model_str = "resnet18"
     main(kreg = kreg, constant_regularization = constant_regularization,lamda=lamda)
