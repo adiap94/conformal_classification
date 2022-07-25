@@ -6,6 +6,7 @@ import os
 import example
 
 def save_results(d,save_path):
+    d = pd.Series(d)
     df = d.to_frame().T
     with open(save_path, 'a') as f:
         df.to_csv(f, mode='a', header=f.tell() == 0, index=False)
