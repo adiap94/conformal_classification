@@ -78,10 +78,10 @@ def main(seed=0,kreg = None,constant_regularization = True,lamda=None,model_str=
                            randomized=randomized, allow_zero_sets=allow_zero_sets, kreg=kreg)
 
     print("Model calibrated and conformalized! Now evaluate over remaining data.")
-    validate(val_loader, model, print_bool=True)
+    top1_avg, top5_avg, coverage_avg, size_avg = validate(val_loader, model, print_bool=True)
 
     print("Complete!")
-
+    return top1_avg, top5_avg, coverage_avg, size_avg
 if __name__ == "__main__":
     lamda = None
     # define
