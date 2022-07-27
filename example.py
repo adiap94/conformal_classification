@@ -12,7 +12,7 @@ import torch.backends.cudnn as cudnn
 import random
 
 parser = argparse.ArgumentParser(description='Conformalize Torchvision Model on Imagenet')
-parser.add_argument('--data', metavar='IMAGENETVALDIR', help='path to Imagenet Val',default="/home/stu4/ml_roie_adi/data_project/imagenet_val/")
+parser.add_argument('--data', metavar='IMAGENETVALDIR', help='path to Imagenet Val',default="/tcmldrive/adi/data/imagenet/imagenet_val/")
 parser.add_argument('--batch_size', metavar='BSZ', help='batch size', default=128)
 parser.add_argument('--num_workers', metavar='NW', help='number of workers', default=0)
 parser.add_argument('--num_calib', metavar='NCALIB', help='number of calibration points', default=10000)
@@ -51,7 +51,7 @@ def main(seed=0,kreg = None,constant_regularization = True,lamda=None,model_str=
 
     # Get the model
     # define gpu
-    os.environ["CUDA_VISIBLE_DEVICES"] = '2'
+    os.environ["CUDA_VISIBLE_DEVICES"] = '0'
     device = torch.device("cuda:0")
 
     # choose a model
