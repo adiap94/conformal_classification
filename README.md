@@ -9,7 +9,7 @@ This work is based on [Uncertainty Sets for Image Classifiers using Conformal Pr
 
 ## Results
 <figure>
-<img src="https://github.com/adiap94/conformal_classification/results_table.jpg" alt="Set-valued classifier." style="display: block; width=1000%">
+<img src="https://github.com/adiap94/conformal_classification/blob/main/results_table.jpg" alt="Set-valued classifier." style="display: block; width=1000%">
 <figcaption>
     Comapring QRAPS and RAPS.
 </figcaption>
