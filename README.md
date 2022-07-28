@@ -7,7 +7,7 @@ This work is based on [Uncertainty Sets for Image Classifiers using Conformal Pr
 1. In order to run the code, you first need to download the dataset and set the envoirnment by following the [original source code](https://github.com/aangelopoulos/conformal_classification/) 
 2. Run main_wrapper.py in order to run both RAPS AND QRAPS
 
-##Results
+## Results
 
 ## Authors
 
