@@ -7,9 +7,9 @@ In this work we propose new regularization methods called QRAPS (Quadratic Regul
 You can read our full report [here] ([https://github.com/aangelopoulos/conformal_classification/](https://github.com/adiap94/conformal_classification/blob/main/report.pdf). 
 
 ## Setup
-1. In order to run the code, you first need to download the dataset and set the envoirnment by following the [original source code](https://github.com/aangelopoulos/conformal_classification/) 
-2. Run main_wrapper.py in order to run both RAPS AND QRAPS
-
+1. In order to run the code, you first need to download the dataset and set the envoirnment by following the [original source code(https://github.com/aangelopoulos/conformal_classification/) 
+2. Run [main_wrapper.py] in order to run the full trails over the different models & algorithms.
+3. Run [unite_statistics.py] in order to get a full statitics report
 ## Results
 
 <figure>
