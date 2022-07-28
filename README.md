@@ -8,6 +8,14 @@ This work is based on [Uncertainty Sets for Image Classifiers using Conformal Pr
 2. Run main_wrapper.py in order to run both RAPS AND QRAPS
 
 ## Results
+<figure>
+<img src="https://github.com/adiap94/conformal_classification/results_table.jpg" alt="Set-valued classifier." style="display: block; width=1000%">
+<figcaption>
+    Comapring QRAPS and RAPS.
+</figcaption>
+</figure>
+
+<br>
 
 ## Authors
 
