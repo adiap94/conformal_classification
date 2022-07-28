@@ -17,14 +17,20 @@ def get_statistics(results_path,overide_bool=False,bool_only_valid_seed=True):
 
     if bool_only_valid_seed:
         df = get_valid_seed_trials(df)
+
     #apply statisics
     stat = df.groupby(["model", "type", "kreg"])['top1_avg', 'top5_avg', "coverage_avg", "size_avg"].mean()
     count = df.groupby(["model", "type", "kreg"]).size()
     stat = pd.concat([stat, count], axis=1)
 
-    mapping = {'top1_avg': "Top-1", 'top5_avg': "Top-5", 'coverage_avg': "Coverage", 'size_avg': "Size", 0: "Count"}
+    mapping = {"model":"Model","type":"Type",'top1_avg': "Top-1", 'top5_avg': "Top-5", 'coverage_avg': "Coverage", 'size_avg': "Size", 0: "Count"}
     stat = stat.rename(columns=mapping)
     # stat = df.groupby(["model", "type", "kreg"])["size_avg"].agg(mean='mean', median='median', num_trials="count")
+    stat_summary = stat.drop(columns=['Top-1', 'Top-5', 'Count'])
+    stat_summary=stat_summary.unstack(level=1).unstack(level=1)
+    stat_summary["Top-1"] = stat.iloc[0]["Top-1"]
+    stat_summary["Top-5"] = stat.iloc[0]["Top-5"]
+    stat_summary["Count"] = stat.iloc[0]["Count"]
     print(stat)
 
     if overide_bool:
@@ -33,7 +39,7 @@ def get_statistics(results_path,overide_bool=False,bool_only_valid_seed=True):
         save_path = os.path.join(os.path.dirname(results_path),"statistics")
         os.makedirs(save_path,exist_ok=True)
         save_path = os.path.join(save_path,time.strftime("%Y%m%d-%H%M%S")+".csv")
-    stat.to_csv(save_path)
+    stat_summary.to_csv(save_path)
 
     return save_path
 
