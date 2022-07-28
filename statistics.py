@@ -14,18 +14,19 @@ def get_valid_seed_trials(df):
 
 def get_statistics(results_path,overide_bool=False,bool_only_valid_seed=True):
     df = pd.read_csv(results_path)
-
+    df.replace(to_replace="inception_v3", value="inception\_v3", inplace=True)
     if bool_only_valid_seed:
         df = get_valid_seed_trials(df)
+    mapping = {"model":"Model","type":"Type",'top1_avg': "Top-1", 'top5_avg': "Top-5", 'coverage_avg': "Coverage", 'size_avg': "Size"}
+    df = df.rename(columns=mapping)
 
     #apply statisics
-    stat = df.groupby(["model", "type", "kreg"])['top1_avg', 'top5_avg', "coverage_avg", "size_avg"].mean()
-    count = df.groupby(["model", "type", "kreg"]).size()
+    stat = df.groupby(["Model", "Type", "kreg"])['Top-1', 'Top-5', "Coverage", "Size"].mean()
+    count = df.groupby(["Model", "Type", "kreg"]).size()
     stat = pd.concat([stat, count], axis=1)
-
-    mapping = {"model":"Model","type":"Type",'top1_avg': "Top-1", 'top5_avg': "Top-5", 'coverage_avg': "Coverage", 'size_avg': "Size", 0: "Count"}
+    mapping = {0: "Count"}
     stat = stat.rename(columns=mapping)
-    # stat = df.groupby(["model", "type", "kreg"])["size_avg"].agg(mean='mean', median='median', num_trials="count")
+
     stat_summary = stat.drop(columns=['Top-1', 'Top-5', 'Count'])
     stat_summary=stat_summary.unstack(level=1).unstack(level=1)
     stat_summary["Top-1"] = stat.iloc[0]["Top-1"]
@@ -39,21 +40,9 @@ def get_statistics(results_path,overide_bool=False,bool_only_valid_seed=True):
         save_path = os.path.join(os.path.dirname(results_path),"statistics")
         os.makedirs(save_path,exist_ok=True)
         save_path = os.path.join(save_path,time.strftime("%Y%m%d-%H%M%S")+".csv")
-    stat_summary.to_csv(save_path)
+    stat.to_csv(save_path)
 
-    return save_path
+    return stat_summary
 
 if __name__ == "__main__":
-    # results_path = "/tcmldrive/adi/ml/results/20220725-094057/results.csv"
-    # get_statistics(results_path=results_path,overide_bool=False)
-
-    paths=[
-        '/tcmldrive/adi/ml/results/20220725-094057/results.csv',
-        '/tcmldrive/adi/ml/results/20220726-220953/results.csv',
-        '/tcmldrive/adi/ml/results/20220726-221018/results.csv',
-        '/tcmldrive/adi/ml/results/20220726-221152/results.csv',
-        '/tcmldrive/adi/ml/results/20220726-221243/results.csv',
-        '/tcmldrive/adi/ml/results/20220726-221309/results.csv']
-
-    stat_paths = [get_statistics(results_path=p,overide_bool=False) for p in paths]
     pass

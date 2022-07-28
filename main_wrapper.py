@@ -4,7 +4,6 @@ import math
 import time
 import os
 import example
-from statistics import get_statistics
 def save_results(d,save_path):
     d = pd.Series(d)
     df = d.to_frame().T
@@ -75,18 +74,25 @@ def run_main_wrapper(out_dir, num_trials = 100 , constant_regularization_list=[T
 
                     # save result in realtime
                     save_results(d=d, save_path=save_path)
-                    get_statistics(results_path = save_path, overide_bool=True)
 
     print("finish main wrapper")
 
 
 if __name__ == "__main__":
+    # set output directory
     out_dir = "/tcmldrive/adi/ml/results"
+
+    # params
     num_trials = 50
     constant_regularization_list = [True, False]
     kreg_list = [None, 0]
-    # model_str_list = ["resnet152", "resnet18", "inception_v3", "shufflenetv2", "resnet50", "vgg16" , "densenet161"]
-    model_str_list = ["densenet161"]
-    # continue_run_path = "/tcmldrive/adi/ml/results/20220725-094057/results.csv"
     continue_run_path = None
-    run_main_wrapper(out_dir=out_dir, num_trials = num_trials , constant_regularization_list=constant_regularization_list , kreg_list=kreg_list , model_str_list=model_str_list,continue_run_path=continue_run_path)
+
+    # run trails per model
+    run_main_wrapper(model_str_list=["resnet152"], out_dir=out_dir, num_trials = num_trials , constant_regularization_list=constant_regularization_list , kreg_list=kreg_list, continue_run_path=continue_run_path)
+    run_main_wrapper(model_str_list=["resnet18"], out_dir=out_dir, num_trials = num_trials , constant_regularization_list=constant_regularization_list , kreg_list=kreg_list, continue_run_path=continue_run_path)
+    run_main_wrapper(model_str_list=["inception_v3"], out_dir=out_dir, num_trials = num_trials , constant_regularization_list=constant_regularization_list , kreg_list=kreg_list, continue_run_path=continue_run_path)
+    run_main_wrapper(model_str_list=["resnet50"], out_dir=out_dir, num_trials = num_trials , constant_regularization_list=constant_regularization_list , kreg_list=kreg_list, continue_run_path=continue_run_path)
+    run_main_wrapper(model_str_list=["vgg16"], out_dir=out_dir, num_trials = num_trials , constant_regularization_list=constant_regularization_list , kreg_list=kreg_list, continue_run_path=continue_run_path)
+    run_main_wrapper(model_str_list=["densenet161"], out_dir=out_dir, num_trials = num_trials , constant_regularization_list=constant_regularization_list , kreg_list=kreg_list, continue_run_path=continue_run_path)
+
